@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Created by matthewtduffin on 14/08/16.
  */
-public class Message {
+public class Message implements Comparable<Message> {
 
     public static final String BODY = "body";
     public static final String USER_ID = "userId";
@@ -34,6 +34,27 @@ public class Message {
         this.userId = userId;
         this.messageId = messageId;
 
+    }
+
+    @Override
+    public int compareTo(Message message) {
+//        String s = message.getMessageId().substring(3);
+//        int i,j;
+//        try {
+//            i = Integer.parseInt(s);
+//        } catch (Exception e) {
+//            i = 0;
+//        }
+//
+//        String t = this.getMessageId().substring(3);
+//        try {
+//            j = Integer.parseInt(t);
+//        } catch (Exception e) {
+//            j = 0;
+//        }
+//
+//        return Double.compare(i, j);
+        return this.getMessageId().compareTo(message.getMessageId());
     }
 
     public String getUserId() {

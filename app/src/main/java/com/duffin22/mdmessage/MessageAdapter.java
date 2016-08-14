@@ -2,6 +2,7 @@ package com.duffin22.mdmessage;
 
 import android.content.Context;
 import android.content.Intent;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,18 +23,18 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
 
 
     public static class MessageViewHolder extends RecyclerView.ViewHolder {
-        TextView senderText, dateText, snippetText, letterText, subjectText;
+        TextView bodyText, dateText, userText;
+        CardView messageCard;
         View view;
 
 
         public MessageViewHolder(View v) {
             super(v);
             //TODO: Add reference to view on the message card view
-//            senderText = (TextView) v.findViewById(R.id.senderView);
-//            subjectText = (TextView) v.findViewById(R.id.subjectView);
-//            dateText = (TextView) v.findViewById(R.id.dateView);
-//            snippetText = (TextView) v.findViewById(R.id.snippetView);
-//            letterText = (TextView) v.findViewById(R.id.letterView);
+            bodyText = (TextView) v.findViewById(R.id.message_body);
+            dateText = (TextView) v.findViewById(R.id.message_date);
+            userText = (TextView) v.findViewById(R.id.message_user);
+            messageCard = (CardView) v.findViewById(R.id.message_card);
             view = v;
 
         }
@@ -55,13 +56,20 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
 
 
     @Override
-    public void onBindViewHolder(MessageViewHolder holder, final int position) {
+    public void onBindViewHolder(final MessageViewHolder holder, final int position) {
 
-        holder.view.setOnClickListener(new View.OnClickListener() {
+        holder.bodyText.setText(messages.get(position).getBody());
+        holder.dateText.setText(messages.get(position).getDate());
+        holder.userText.setText(messages.get(position).getUserId());
+
+        holder.messageCard.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String stringy = "Pressed "+ messages.get(position).getMessageId();
-                Toast.makeText(context, stringy, Toast.LENGTH_SHORT).show();
+                if (holder.dateText.getVisibility() == View.GONE) {
+                    holder.dateText.setVisibility(View.VISIBLE);
+                } else {
+                    holder.dateText.setVisibility(View.GONE);
+                }
             }
         });
 

@@ -1,5 +1,6 @@
 package com.duffin22.mdmessage;
 
+import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -19,6 +20,7 @@ import com.firebase.client.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -29,7 +31,6 @@ import jp.wasabeef.recyclerview.adapters.AlphaInAnimationAdapter;
 
 
 public class MainActivity extends AppCompatActivity {
-    TextView userId;
     EditText mEditText;
     Button mSubmitButton;
     Firebase mFirebaseRef;
@@ -37,26 +38,34 @@ public class MainActivity extends AppCompatActivity {
     public static RecyclerView recyclerView;
     LinearLayoutManager layoutManager;
     int messageId = 1;
+    String userId;
+
+    public static final String MY_PREFS_NAME = "my_prefs";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
+        userId= prefs.getString("id", null);
+
+//        if (userId == null) {
+            userId = newUserId();
+//        }
+
         if (allMessages != null) {
             layoutManager = new LinearLayoutManager(this);
+            layoutManager.setStackFromEnd(true);
             recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
 
             recyclerView.setLayoutManager(layoutManager);
+            Collections.sort(allMessages);
 
             MessageAdapter adapty = new MessageAdapter(allMessages, R.layout.message_card, this);
             recyclerView.setAdapter(adapty);
         }
-
-        //Set user id TextView to be the user's ID
-        final String id = "abc123";
-        userId = (TextView) findViewById(R.id.user_id);
-        userId.setText(id);
 
         //Get reference to the correct chat room
         mFirebaseRef = new Firebase("https://mdmessage-c7162.firebaseio.com/chat_room1/Messages");
@@ -67,46 +76,54 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
 
-                recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+                try {
 
-                Object obby = dataSnapshot.getValue(Object.class);
-                LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<String, String>>> object = (LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<String, String>>>) obby;
-                Set<String> setty = object.keySet();
+                    recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
 
-                List<Message> messages = new ArrayList<Message>();
+                    Object obby = dataSnapshot.getValue(Object.class);
+                    LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<String, String>>> object = (LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<String, String>>>) obby;
+                    Set<String> setty = object.keySet();
 
-                for (String key : setty) {
+                    List<Message> messages = new ArrayList<Message>();
 
-                    Object oDate = object.get(key).get(Message.DATE);
-                    String date = oDate.toString();
+                    for (String key : setty) {
 
-                    Object oBody = object.get(key).get(Message.BODY);
-                    String body = oBody.toString();
+                        Object oDate = object.get(key).get(Message.DATE);
+                        String date = oDate.toString();
 
-                    Object oUserId = object.get(key).get(Message.USER_ID);
-                    String userId = oUserId.toString();
+                        Object oBody = object.get(key).get(Message.BODY);
+                        String body = oBody.toString();
 
-                    Object oMessageId = object.get(key).get(Message.MESSAGE_ID);
-                    String messageId = oMessageId.toString();
+                        Object oUserId = object.get(key).get(Message.USER_ID);
+                        String userId = oUserId.toString();
 
-                    Message messy = new Message(body,date,userId,messageId);
-                    messages.add(messy);
+                        Object oMessageId = object.get(key).get(Message.MESSAGE_ID);
+                        String messageId = oMessageId.toString();
 
-                    Log.i("MATT-TEST", "Heyyyyyyy");
-                }
+                        Message messy = new Message(body, date, userId, messageId);
+                        messages.add(messy);
 
-                allMessages = messages;
-                Log.i("MATT-TEST", obby.toString());
-
-                if (allMessages != null) {
-
-                    MessageAdapter adapter = new MessageAdapter(messages, R.layout.message_card, MainActivity.this);
-                    if (recyclerView.getAdapter() == null) {
-                        recyclerView.setAdapter(new AlphaInAnimationAdapter(adapter));
-                        recyclerView.setLayoutManager(new LinearLayoutManager(getBaseContext()));
-                    } else {
-                        recyclerView.swapAdapter(new AlphaInAnimationAdapter(adapter), false);
+                        Log.i("MATT-TEST", "Heyyyyyyy");
                     }
+
+                    allMessages = messages;
+                    Log.i("MATT-TEST", obby.toString());
+
+                    if (allMessages != null) {
+
+                        Collections.sort(allMessages);
+                        MessageAdapter adapter = new MessageAdapter(messages, R.layout.message_card, MainActivity.this);
+                        if (recyclerView.getAdapter() == null) {
+                            recyclerView.setAdapter(new AlphaInAnimationAdapter(adapter));
+                            LinearLayoutManager layouty = new LinearLayoutManager(getBaseContext());
+                            layouty.setStackFromEnd(true);
+                            recyclerView.setLayoutManager(layouty);
+                        } else {
+                            recyclerView.swapAdapter(new AlphaInAnimationAdapter(adapter), false);
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
 
             }
@@ -124,19 +141,41 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                //TODO: Unique UserId
-                String userId= id;
                 String message = mEditText.getText().toString();
                 String date = getDate();
                 String messageId = getMessageId();
 
                 Message newMessage = new Message(message, date, userId, messageId);
 
-//                addToFirebase(message,id);
                 addToFirebase(newMessage);
 
             }
         });
+
+    }
+
+    @Override
+    protected void onStop() {
+        if (userId != null) {
+            SharedPreferences.Editor editor = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).edit();
+            editor.putString("id", userId);
+            editor.apply();
+        }
+        super.onStop();
+    }
+
+    public String newUserId() {
+        String[] NATO = {"Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel", "India", "Juliet", "Kilo", "Lima", "Mike", "November", "Oscar", "Papa","Quebec","Romeo","Sierra","Tango","Uniform", "Victor", "Whiskey", "X-ray", "Yankee", "Zulu"};
+
+        int index1 = (int) ((Math.random()) * NATO.length);
+        int index2 = (int) ((Math.random()) * NATO.length);
+
+        long time = Calendar.getInstance().getTimeInMillis();
+        int timeInt = (int) time%222071992;
+        String timeHex = Integer.toHexString(timeInt);
+
+
+        return NATO[index1]+NATO[index2]+"-"+timeHex;
 
     }
 
@@ -185,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
         int minute = rightNow.get(Calendar.MINUTE);
         int seconds = rightNow.get(Calendar.SECOND);
 
-        String date = ""+getDay(weekday)+", "+day+" "+getMonth(month).substring(0,3)+" "+year+", "+formatNumber(hour)+":"+formatNumber(minute)+":"+ formatNumber(seconds);
+        String date = getMonth(month).substring(0,3)+" "+day+", "+formatNumber(hour)+":"+formatNumber(minute)+":"+ formatNumber(seconds);
 
         return date;
     }
