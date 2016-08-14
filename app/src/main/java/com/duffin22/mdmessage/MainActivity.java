@@ -2,6 +2,8 @@ package com.duffin22.mdmessage;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -23,6 +25,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
 
+import jp.wasabeef.recyclerview.adapters.AlphaInAnimationAdapter;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -31,12 +34,24 @@ public class MainActivity extends AppCompatActivity {
     Button mSubmitButton;
     Firebase mFirebaseRef;
     List<Message> allMessages;
+    public static RecyclerView recyclerView;
+    LinearLayoutManager layoutManager;
     int messageId = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        if (allMessages != null) {
+            layoutManager = new LinearLayoutManager(this);
+            recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+
+            recyclerView.setLayoutManager(layoutManager);
+
+            MessageAdapter adapty = new MessageAdapter(allMessages, R.layout.message_card, this);
+            recyclerView.setAdapter(adapty);
+        }
 
         //Set user id TextView to be the user's ID
         final String id = "abc123";
@@ -51,6 +66,8 @@ public class MainActivity extends AppCompatActivity {
         mFirebaseRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+
+                recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
 
                 Object obby = dataSnapshot.getValue(Object.class);
                 LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<String, String>>> object = (LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<String, String>>>) obby;
@@ -80,6 +97,18 @@ public class MainActivity extends AppCompatActivity {
 
                 allMessages = messages;
                 Log.i("MATT-TEST", obby.toString());
+
+                if (allMessages != null) {
+
+                    MessageAdapter adapter = new MessageAdapter(messages, R.layout.message_card, MainActivity.this);
+                    if (recyclerView.getAdapter() == null) {
+                        recyclerView.setAdapter(new AlphaInAnimationAdapter(adapter));
+                        recyclerView.setLayoutManager(new LinearLayoutManager(getBaseContext()));
+                    } else {
+                        recyclerView.swapAdapter(new AlphaInAnimationAdapter(adapter), false);
+                    }
+                }
+
             }
 
             @Override
