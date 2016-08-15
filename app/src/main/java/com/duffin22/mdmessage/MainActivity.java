@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
@@ -50,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
     public static String userId;
     public static String userAlias;
     public static User mUser;
+    public static HashMap<String,User> allUsers;
 
     public static final String MY_PREFS_NAME = "my_prefs";
 
@@ -94,9 +96,70 @@ public class MainActivity extends AppCompatActivity {
             recyclerView.setAdapter(adapty);
         }
 
-        //Get reference to the correct chat room
+        mUserbaseRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
 
-        String newKey = mFirebaseRef.push().getKey();
+                try {
+
+                    recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+
+                    Object obby = dataSnapshot.getValue(Object.class);
+
+                    Log.i("MATT-TEST", "here");
+
+                    LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<String, String>>> object = (LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<String, String>>>) obby;
+                    Set<String> setty = object.keySet();
+
+                    HashMap<String,User> users = new HashMap<String, User>();
+
+                    for (String key : setty) {
+
+                        Object oColor = object.get(key).get(User.COLOR);
+                        String stringColor = oColor.toString();
+                        int color = Integer.parseInt(stringColor);
+
+                        Object oAlias = object.get(key).get(User.ALIAS);
+                        String alias = oAlias.toString();
+
+                        Object oUserId = object.get(key).get(User.USER_ID);
+                        String userId = oUserId.toString();
+
+                        User usey = new User(userId);
+                        usey.setColor(color);
+                        usey.setAlias(alias);
+                        users.put(userId,usey);
+
+                        Log.i("MATT-TEST", "Heyyyyyyy");
+                    }
+
+                    allUsers = users;
+
+                    if (allMessages != null) {
+
+                        Collections.sort(allMessages);
+                        MessageAdapter adapter = new MessageAdapter(allMessages, R.layout.message_card, MainActivity.this);
+                        if (recyclerView.getAdapter() == null) {
+                            recyclerView.setAdapter(new AlphaInAnimationAdapter(adapter));
+                            LinearLayoutManager layouty = new LinearLayoutManager(getBaseContext());
+                            layouty.setStackFromEnd(true);
+                            recyclerView.setLayoutManager(layouty);
+                        } else {
+                            recyclerView.swapAdapter(new AlphaInAnimationAdapter(adapter), false);
+                        }
+                        recyclerView.scrollToPosition(allMessages.size()-1);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
 
         mFirebaseRef.addValueEventListener(new ValueEventListener() {
             @Override

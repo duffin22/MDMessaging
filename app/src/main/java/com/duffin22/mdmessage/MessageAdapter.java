@@ -66,9 +66,21 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
     @Override
     public void onBindViewHolder(final MessageViewHolder holder, final int position) {
 
+        User currentUser;
+        try {
+            currentUser = MainActivity.allUsers.get(messages.get(position).getUserId());
+        } catch (Exception e) {
+            currentUser = new User(messages.get(position).getUserId());
+        }
+
         holder.bodyText.setText(messages.get(position).getBody());
         holder.dateText.setText(messages.get(position).getDate());
-        holder.userText.setText(messages.get(position).getUserId());
+        try {
+            holder.userText.setText(currentUser.getAlias());
+        } catch (Exception e) {
+            holder.userText.setText(messages.get(position).getUserId());
+            e.printStackTrace();
+        }
 
         try {
             if (messages.get(position).getUserId().equals(messages.get(position - 1).getUserId())) {
@@ -84,7 +96,12 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
         int color = 0, oppositeColor = 0, softColor = 0, backColor = 0;
         if (messages.get(position).getUserId().equals(MainActivity.userId)) {
             holder.bigLayout.setGravity(Gravity.START);
-            holder.userText.setText(messages.get(position).getUserId()+" (me)");
+            try {
+                holder.userText.setText(currentUser.getAlias() + " (me)");
+            } catch (Exception e) {
+                holder.userText.setText(messages.get(position).getUserId());
+                e.printStackTrace();
+            }
             try {
                 color = MainActivity.userColor;
                 oppositeColor = getOpposite(color);
@@ -97,13 +114,14 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
             backColor = holder.view.getResources().getColor(R.color.colorPrimary);
         } else {
             holder.bigLayout.setGravity(Gravity.END);
+            color = holder.view.getResources().getColor(R.color.grey);
             oppositeColor = getOpposite(color);
             softColor = getSoft(color);
             backColor = holder.view.getResources().getColor(R.color.colorAccent);
         }
 
-//        holder.userText.setTextColor(color);
-        holder.userText.setTextColor(backColor);
+        holder.userText.setTextColor(color);
+//        holder.userText.setTextColor(backColor);
         holder.cardLayout.setBackgroundColor(softColor);
         holder.bodyText.setTextColor(oppositeColor);
 
@@ -134,7 +152,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
         int green = Color.green(color);
         int blue = Color.blue(color);
 
-        return Color.argb(30,red,green,blue);
+        return Color.argb(180,red,green,blue);
     }
 
     public int getOpposite(int color) {
@@ -142,7 +160,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
         int green = Color.green(color);
         int blue = Color.blue(color);
 
-        return Color.argb(255,180-(red/2),180-(green/2),180-(blue/2));
+        return Color.argb(255,255-red,255-green,255-blue);
     }
 
 }

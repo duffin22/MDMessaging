@@ -10,6 +10,11 @@ public class User {
     private String alias;
     private int color;
 
+    public static final String USER_ID = "userId";
+    public static final String ALIAS = "alias";
+    public static final String COLOR = "color";
+
+
     public User(String userId) {
         this.userId = userId;
         this.alias = userId;
