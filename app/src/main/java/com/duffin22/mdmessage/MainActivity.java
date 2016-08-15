@@ -1,14 +1,18 @@
 package com.duffin22.mdmessage;
 
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -17,6 +21,10 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.GenericTypeIndicator;
 import com.firebase.client.ValueEventListener;
+import com.flask.colorpicker.ColorPickerView;
+import com.flask.colorpicker.OnColorSelectedListener;
+import com.flask.colorpicker.builder.ColorPickerClickListener;
+import com.flask.colorpicker.builder.ColorPickerDialogBuilder;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -32,13 +40,14 @@ import jp.wasabeef.recyclerview.adapters.AlphaInAnimationAdapter;
 
 public class MainActivity extends AppCompatActivity {
     EditText mEditText;
-    Button mSubmitButton;
+    ImageView mSubmitButton;
     Firebase mFirebaseRef;
+    public static int userColor;
     List<Message> allMessages;
     public static RecyclerView recyclerView;
     LinearLayoutManager layoutManager;
     int messageId = 1;
-    String userId;
+    public static String userId;
 
     public static final String MY_PREFS_NAME = "my_prefs";
 
@@ -50,10 +59,15 @@ public class MainActivity extends AppCompatActivity {
 
         SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
         userId= prefs.getString("id", null);
+        userColor = prefs.getInt("color", 0);
 
-//        if (userId == null) {
+        if (userId == null) {
             userId = newUserId();
-//        }
+        }
+
+        if (userColor == 0) {
+            pickColor();
+        }
 
         if (allMessages != null) {
             layoutManager = new LinearLayoutManager(this);
@@ -121,6 +135,7 @@ public class MainActivity extends AppCompatActivity {
                         } else {
                             recyclerView.swapAdapter(new AlphaInAnimationAdapter(adapter), false);
                         }
+                        recyclerView.scrollToPosition(messages.size()-1);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -136,22 +151,98 @@ public class MainActivity extends AppCompatActivity {
 
         mEditText = (EditText) findViewById(R.id.message_text);
 
-        mSubmitButton = (Button) findViewById(R.id.send_button);
+        mSubmitButton = (ImageView) findViewById(R.id.send_button);
         mSubmitButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
                 String message = mEditText.getText().toString();
-                String date = getDate();
-                String messageId = getMessageId();
 
-                Message newMessage = new Message(message, date, userId, messageId);
+                if (message.equals("")) {
+                    Toast.makeText(MainActivity.this, "There's no way I'm going to let you send a blank message!", Toast.LENGTH_SHORT).show();
+                } else {
 
-                addToFirebase(newMessage);
+                    mEditText.setText("");
+
+                    String date = getDate();
+                    String messageId = getMessageId();
+
+                    Message newMessage = new Message(message, date, userId, messageId);
+
+                    addToFirebase(newMessage);
+                }
 
             }
         });
 
+    }
+
+    public void pickColor() {
+
+        ColorPickerDialogBuilder
+                .with(MainActivity.this)
+                .setTitle("Choose Your Color")
+//                .initialColor(currentBackgroundColor)
+                .wheelType(ColorPickerView.WHEEL_TYPE.FLOWER)
+                .density(12)
+                .setOnColorSelectedListener(new OnColorSelectedListener() {
+                    @Override
+                    public void onColorSelected(int selectedColor) {
+//                        toast("onColorSelected: 0x" + Integer.toHexString(selectedColor));
+                    }
+                })
+                .setPositiveButton("ok", new ColorPickerClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int selectedColor, Integer[] allColors) {
+                        userColor = selectedColor;
+                        if (allMessages != null) {
+
+                            Collections.sort(allMessages);
+                            MessageAdapter adapter = new MessageAdapter(allMessages, R.layout.message_card, MainActivity.this);
+                            if (recyclerView.getAdapter() == null) {
+                                recyclerView.setAdapter(new AlphaInAnimationAdapter(adapter));
+                                LinearLayoutManager layouty = new LinearLayoutManager(getBaseContext());
+                                layouty.setStackFromEnd(true);
+                                recyclerView.setLayoutManager(layouty);
+                            } else {
+                                recyclerView.swapAdapter(new AlphaInAnimationAdapter(adapter), false);
+                            }
+                            recyclerView.scrollToPosition(allMessages.size()-1);
+                        }
+                        dialog.dismiss();
+                    }
+                })
+                .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                })
+                .build()
+                .show();
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+        if (id == R.id.action_color) {
+
+            pickColor();
+
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -159,6 +250,7 @@ public class MainActivity extends AppCompatActivity {
         if (userId != null) {
             SharedPreferences.Editor editor = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).edit();
             editor.putString("id", userId);
+            editor.putInt("color", userColor);
             editor.apply();
         }
         super.onStop();

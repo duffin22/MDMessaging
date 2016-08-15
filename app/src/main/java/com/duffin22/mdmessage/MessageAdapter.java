@@ -2,13 +2,18 @@ package com.duffin22.mdmessage;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.firebase.client.android.AndroidPlatform;
 
 import java.util.List;
 
@@ -20,21 +25,24 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
     private List<Message> messages;
     private int rowLayout;
     private Context context;
+    public String lastId;
 
 
     public static class MessageViewHolder extends RecyclerView.ViewHolder {
         TextView bodyText, dateText, userText;
+        LinearLayout cardLayout, bigLayout;
         CardView messageCard;
         View view;
 
 
         public MessageViewHolder(View v) {
             super(v);
-            //TODO: Add reference to view on the message card view
+            bigLayout = (LinearLayout) v.findViewById(R.id.message_layout);
             bodyText = (TextView) v.findViewById(R.id.message_body);
             dateText = (TextView) v.findViewById(R.id.message_date);
             userText = (TextView) v.findViewById(R.id.message_user);
             messageCard = (CardView) v.findViewById(R.id.message_card);
+            cardLayout = (LinearLayout) v.findViewById(R.id.card_linear_layout);
             view = v;
 
         }
@@ -62,6 +70,42 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
         holder.dateText.setText(messages.get(position).getDate());
         holder.userText.setText(messages.get(position).getUserId());
 
+        try {
+            if (messages.get(position).getUserId().equals(messages.get(position - 1).getUserId())) {
+                holder.userText.setVisibility(View.GONE);
+            } else {
+                holder.userText.setVisibility(View.VISIBLE);
+            }
+        } catch (ArrayIndexOutOfBoundsException e) {
+            holder.userText.setVisibility(View.VISIBLE);
+        }
+
+
+        int color = 0, oppositeColor = 0, softColor = 0;
+        if (messages.get(position).getUserId().equals(MainActivity.userId)) {
+            holder.bigLayout.setGravity(Gravity.START);
+            holder.userText.setText(messages.get(position).getUserId()+" (me)");
+            try {
+                color = MainActivity.userColor;
+                oppositeColor = getOpposite(color);
+                softColor = getSoft(color);
+            } catch (Exception e) {
+                color = holder.view.getResources().getColor(R.color.colorAccent);
+                oppositeColor = getOpposite(color);
+                softColor = getSoft(color);
+            }
+        } else {
+            holder.bigLayout.setGravity(Gravity.END);
+            color = holder.view.getResources().getColor(R.color.colorPrimary);
+            oppositeColor = getOpposite(color);
+            softColor = getSoft(color);
+        }
+
+        holder.userText.setTextColor(color);
+        holder.cardLayout.setBackgroundColor(softColor);
+        holder.bodyText.setTextColor(oppositeColor);
+
+
         holder.messageCard.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -73,12 +117,30 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
             }
         });
 
+        lastId = messages.get(position).getUserId();
+
 
     }
 
     @Override
     public int getItemCount() {
         return messages.size();
+    }
+
+    public int getSoft(int color) {
+        int red = Color.red(color);
+        int green = Color.green(color);
+        int blue = Color.blue(color);
+
+        return Color.argb(30,red,green,blue);
+    }
+
+    public int getOpposite(int color) {
+        int red = Color.red(color);
+        int green = Color.green(color);
+        int blue = Color.blue(color);
+
+        return Color.rgb(255-red,255-green,255-blue);
     }
 
 }

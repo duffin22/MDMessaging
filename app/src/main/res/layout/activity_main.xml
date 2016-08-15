@@ -29,21 +29,24 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:orientation="horizontal"
-        android:background="#dedede"
+        android:background="#eeeeee"
+        android:gravity="center_vertical"
         android:layout_height="wrap_content">
 
         <EditText
             android:layout_width="0dp"
-            android:layout_weight="4"
+            android:layout_weight="7"
             android:id="@+id/message_text"
             android:layout_height="wrap_content" />
 
-        <Button
+        <ImageView
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:text="Send"
-            android:id="@+id/send_button"/>
+            android:src="@drawable/ic_send_black_24dp"
+            android:padding="2dp"
+            android:id="@+id/send_button"
+            android:tint="@color/colorPrimary"
+            android:layout_height="wrap_content" />
 
     </LinearLayout>
 

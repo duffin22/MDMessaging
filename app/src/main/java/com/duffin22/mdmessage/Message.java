@@ -38,22 +38,7 @@ public class Message implements Comparable<Message> {
 
     @Override
     public int compareTo(Message message) {
-//        String s = message.getMessageId().substring(3);
-//        int i,j;
-//        try {
-//            i = Integer.parseInt(s);
-//        } catch (Exception e) {
-//            i = 0;
-//        }
-//
-//        String t = this.getMessageId().substring(3);
-//        try {
-//            j = Integer.parseInt(t);
-//        } catch (Exception e) {
-//            j = 0;
-//        }
-//
-//        return Double.compare(i, j);
+
         return this.getMessageId().compareTo(message.getMessageId());
     }
 
