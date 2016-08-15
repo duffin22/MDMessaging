@@ -18,16 +18,6 @@ public class Message implements Comparable<Message> {
     private String userId;
     private String messageId;
 
-//    @JsonCreator public Message(@JsonProperty(BODY) String body,
-//                                @JsonProperty(DATE) String date,
-//                                @JsonProperty(USER_ID) String userId,
-//                                @JsonProperty(MESSAGE_ID) String messageId) {
-//        this.body = body;
-//        this.date = date;
-//        this.userId = userId;
-//        this.messageId = messageId;
-//    }
-
     public Message(String body, String date, String userId, String messageId) {
         this.body = body;
         this.date = date;

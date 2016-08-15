@@ -41,13 +41,15 @@ import jp.wasabeef.recyclerview.adapters.AlphaInAnimationAdapter;
 public class MainActivity extends AppCompatActivity {
     EditText mEditText;
     ImageView mSubmitButton;
-    Firebase mFirebaseRef;
+    Firebase mFirebaseRef, mUserbaseRef;
     public static int userColor;
     List<Message> allMessages;
     public static RecyclerView recyclerView;
     LinearLayoutManager layoutManager;
     int messageId = 1;
     public static String userId;
+    public static String userAlias;
+    public static User mUser;
 
     public static final String MY_PREFS_NAME = "my_prefs";
 
@@ -57,12 +59,23 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mFirebaseRef = new Firebase("https://mdmessage-c7162.firebaseio.com/chat_room1/Messages");
+        mUserbaseRef = new Firebase("https://mdmessage-c7162.firebaseio.com/chat_room1/Users");
+
         SharedPreferences prefs = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE);
         userId= prefs.getString("id", null);
+        userAlias = prefs.getString("alias", null);
         userColor = prefs.getInt("color", 0);
+
+        mUser = new User(userId);
+        mUser.setAlias(userAlias);
+        mUser.setColor(userColor);
 
         if (userId == null) {
             userId = newUserId();
+            userAlias = userId;
+            User usey = new User(userId);
+            addToFirebase(usey);
         }
 
         if (userColor == 0) {
@@ -82,7 +95,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         //Get reference to the correct chat room
-        mFirebaseRef = new Firebase("https://mdmessage-c7162.firebaseio.com/chat_room1/Messages");
 
         String newKey = mFirebaseRef.push().getKey();
 
@@ -195,6 +207,8 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int selectedColor, Integer[] allColors) {
                         userColor = selectedColor;
+                        mUser.setColor(userColor);
+                        addToFirebase(mUser);
                         if (allMessages != null) {
 
                             Collections.sort(allMessages);
@@ -237,10 +251,13 @@ public class MainActivity extends AppCompatActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_color) {
-
             pickColor();
-
             return true;
+        } else if (id == R.id.action_username) {
+            Toast.makeText(MainActivity.this, "Your display name has been changed!", Toast.LENGTH_SHORT).show();
+            userAlias = newUserId();
+            mUser.setAlias(userAlias);
+            addToFirebase(mUser);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -250,6 +267,7 @@ public class MainActivity extends AppCompatActivity {
         if (userId != null) {
             SharedPreferences.Editor editor = getSharedPreferences(MY_PREFS_NAME, MODE_PRIVATE).edit();
             editor.putString("id", userId);
+            editor.putString("alias",userAlias);
             editor.putInt("color", userColor);
             editor.apply();
         }
@@ -278,6 +296,12 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    public void addToFirebase(User user) {
+
+        Firebase firebaseBodyText = mUserbaseRef.child(user.getUserId());
+        firebaseBodyText.setValue(user);
+
+    }
 
     public void addToFirebase(String message, String id) {
         String date = getDate();

@@ -7,7 +7,12 @@ tools:context="com.example.toolbar.MainActivity" >
     <item android:id="@+id/action_color"
         android:icon="@drawable/ic_format_color_text_black_24dp"
         android:title="Change Your Color"
-        android:orderInCategory="1" />
+        />
+
+    <item android:id="@+id/action_username"
+        android:icon="@drawable/ic_person_black_24dp"
+        android:title="Change Your Display Name"
+        />
 
 
 </menu>

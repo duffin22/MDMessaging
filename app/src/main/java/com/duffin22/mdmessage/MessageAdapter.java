@@ -81,7 +81,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
         }
 
 
-        int color = 0, oppositeColor = 0, softColor = 0;
+        int color = 0, oppositeColor = 0, softColor = 0, backColor = 0;
         if (messages.get(position).getUserId().equals(MainActivity.userId)) {
             holder.bigLayout.setGravity(Gravity.START);
             holder.userText.setText(messages.get(position).getUserId()+" (me)");
@@ -94,14 +94,16 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
                 oppositeColor = getOpposite(color);
                 softColor = getSoft(color);
             }
+            backColor = holder.view.getResources().getColor(R.color.colorPrimary);
         } else {
             holder.bigLayout.setGravity(Gravity.END);
-            color = holder.view.getResources().getColor(R.color.colorPrimary);
             oppositeColor = getOpposite(color);
             softColor = getSoft(color);
+            backColor = holder.view.getResources().getColor(R.color.colorAccent);
         }
 
-        holder.userText.setTextColor(color);
+//        holder.userText.setTextColor(color);
+        holder.userText.setTextColor(backColor);
         holder.cardLayout.setBackgroundColor(softColor);
         holder.bodyText.setTextColor(oppositeColor);
 
@@ -140,7 +142,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
         int green = Color.green(color);
         int blue = Color.blue(color);
 
-        return Color.rgb(255-red,255-green,255-blue);
+        return Color.argb(255,180-(red/2),180-(green/2),180-(blue/2));
     }
 
 }
